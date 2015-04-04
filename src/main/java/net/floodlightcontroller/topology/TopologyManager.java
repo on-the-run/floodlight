@@ -128,7 +128,7 @@ public class TopologyManager implements
      */
     protected Set<NodePortTuple> tunnelPorts;
 
-    protected ILinkDiscoveryService linkDiscovery;
+    //protected ILinkDiscoveryService linkDiscovery; // Disable LD module - Yiyang
     protected IThreadPoolService threadPool;
     protected IFloodlightProviderService floodlightProvider;
     protected IRestApiService restApi;
@@ -359,8 +359,10 @@ public class TopologyManager implements
         // If the switch port is 'tun-bsn' port, it is not
         // an attachment point port, irrespective of whether
         // a link is found through it or not.
+    	/*
         if (linkDiscovery.isTunnelPort(switchid, port))
             return false;
+        */ // Disable LD module - Yiyang
 
         TopologyInstance ti = getCurrentInstance(tunnelEnabled);
 
@@ -829,7 +831,7 @@ public class TopologyManager implements
             getModuleDependencies() {
         Collection<Class<? extends IFloodlightService>> l =
                 new ArrayList<Class<? extends IFloodlightService>>();
-        l.add(ILinkDiscoveryService.class);
+        //l.add(ILinkDiscoveryService.class); // Disable LD module - Yiyang
         l.add(IThreadPoolService.class);
         l.add(IFloodlightProviderService.class);
         l.add(ICounterStoreService.class);
@@ -840,7 +842,7 @@ public class TopologyManager implements
     @Override
     public void init(FloodlightModuleContext context)
             throws FloodlightModuleException {
-        linkDiscovery = context.getServiceImpl(ILinkDiscoveryService.class);
+        //linkDiscovery = context.getServiceImpl(ILinkDiscoveryService.class); // Disable LD module - Yiyang
         threadPool = context.getServiceImpl(IThreadPoolService.class);
         floodlightProvider =
                 context.getServiceImpl(IFloodlightProviderService.class);
@@ -888,7 +890,7 @@ public class TopologyManager implements
             newInstanceTask.reschedule(TOPOLOGY_COMPUTE_INTERVAL_MS,
                                    TimeUnit.MILLISECONDS);
 
-        linkDiscovery.addListener(this);
+        //linkDiscovery.addListener(this); // Disable LD module - Yiyang
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
         floodlightProvider.addHAListener(this.haListener);
         addRestletRoutable();
@@ -1013,7 +1015,8 @@ public class TopologyManager implements
      * @return
      */
     protected Set<Short> getPortsToEliminateForBDDP(long sid) {
-        Set<NodePortTuple> suppressedNptList = linkDiscovery.getSuppressLLDPsInfo();
+        /*
+    	Set<NodePortTuple> suppressedNptList = linkDiscovery.getSuppressLLDPsInfo();
         if (suppressedNptList == null) return null;
 
         Set<Short> resultPorts = new HashSet<Short>();
@@ -1024,6 +1027,8 @@ public class TopologyManager implements
         }
 
         return resultPorts;
+        */ // Disable LD module - Yiyang
+    	return null; // Disable LD module - Yiyang
     }
 
     /**
@@ -1541,9 +1546,11 @@ public class TopologyManager implements
         if (ofpList == null) return Collections.emptySet();
 
         Set<Short> ports = new HashSet<Short>(ofpList);
+        /*
         Set<Short> qPorts = linkDiscovery.getQuarantinedPorts(sw);
         if (qPorts != null)
             ports.removeAll(qPorts);
+        */ // Disable LD module - Yiyang
 
         return ports;
     }
