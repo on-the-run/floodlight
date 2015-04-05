@@ -910,6 +910,10 @@ public abstract class OFSwitchBase implements IOFSwitch {
 
     @Override
     public boolean portEnabled(short portNumber) {
+    	// Yiyang: hacking, hard-code port 129
+        if (portNumber == (short)129) {
+        	return true;
+        }
         ImmutablePort p = portManager.getPort(portNumber);
         if (p == null) return false;
         return p.isEnabled();

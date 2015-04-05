@@ -58,8 +58,9 @@ import net.floodlightcontroller.debugevent.IDebugEventService.EventColumn;
 import net.floodlightcontroller.debugevent.IDebugEventService.EventFieldType;
 import net.floodlightcontroller.debugevent.IDebugEventService.EventType;
 import net.floodlightcontroller.debugevent.IDebugEventService.MaxEventsRegistered;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryListener;
-import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
+//import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService; // Disable LD module - Yiyang
 import net.floodlightcontroller.packet.BSN;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.LLDP;
@@ -894,7 +895,80 @@ public class TopologyManager implements
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
         floodlightProvider.addHAListener(this.haListener);
         addRestletRoutable();
+        
+        /**
+         * Yiyang: Implant a customized topology here
+         */
+        int coreGroup = 32; //32
+        int coreInGroup = 16; //16
+        int aggTorGroup = 32; //32
+        int aggInGroup = 32; //32
+        int torInGroup = 32; //32
+        
+        if (!createTopology(coreGroup, coreInGroup, aggTorGroup, aggInGroup, torInGroup)) {
+        	System.err.println("ERROR in createTopology()");
+        	System.exit(1);
+        } else {
+        	System.out.println("================= createTopology() succeeded! =================");
+        }
+
     }
+    
+    public boolean createTopology(int coreGroup, int coreInGoup, int aggTorGroup, int aggInGroup, int torInGroup) {
+        /* Connect between core and agg */
+        int i, j, k;
+        long srcId, dstId;
+        short srcPort, dstPort;
+        int aggIdOffset = coreGroup * coreInGoup;
+        int torIdOffset = aggIdOffset + aggTorGroup * aggInGroup;
+        int aggPortOffset = coreInGoup;
+
+        //long startOfLoop, durationOfLoop;
+
+        for (i = 1; i <= coreGroup; i++ ) {
+                for (j = 1; j <= coreInGoup; j++) {
+                        for (k = 1; k <= aggTorGroup; k++) {
+                                srcId = (long)(j + (i - 1) * coreInGoup);
+                                dstId = (long)(aggIdOffset + i + (k - 1) * aggInGroup);
+                                srcPort = (short)(k);
+                                dstPort = (short)(j);
+
+                                //startOfLoop = System.currentTimeMillis();
+                                addOrUpdateLink(srcId, srcPort, dstId, dstPort, ILinkDiscovery.LinkType.DIRECT_LINK);
+                                addOrUpdateLink(dstId, dstPort, srcId, srcPort, ILinkDiscovery.LinkType.DIRECT_LINK);
+                                //durationOfLoop = System.currentTimeMillis() - startOfLoop;
+                                //System.out.format("Duration of one loop = %d ms%n", durationOfLoop);
+                        }
+                }
+        }
+
+        /* Connect between agg and tor */
+        for (i = 1; i <= aggTorGroup; i++) {
+                for (j = 1; j <= aggInGroup; j++) {
+                        for (k = 1; k <= torInGroup; k++) {
+                                srcId = (long)(aggIdOffset + j + (i - 1) * aggInGroup);
+                                dstId = (long)(torIdOffset + k + (i - 1) * torInGroup);
+                                srcPort = (short)(aggPortOffset + k);
+                                dstPort = (short)(j);
+                                addOrUpdateLink(srcId, srcPort, dstId, dstPort, ILinkDiscovery.LinkType.DIRECT_LINK);
+                                addOrUpdateLink(dstId, dstPort, srcId, srcPort, ILinkDiscovery.LinkType.DIRECT_LINK);
+                        }
+                }
+        }
+
+        NodePortTuple npt;
+        for (i = 1; i <= torInGroup * aggTorGroup; i++) {
+                addLinkToStructure(switchPortLinks, new Link());
+                npt = new NodePortTuple((long)i, (short)129);
+                switchPortLinks.put(npt, new HashSet<Link>());
+        }
+
+        //for init create end hosts
+        addOrUpdateLink(9999L, (short)1, 1L, (short)9999, ILinkDiscovery.LinkType.DIRECT_LINK);
+        addOrUpdateLink(1L, (short)9999, 9999L, (short)1, ILinkDiscovery.LinkType.DIRECT_LINK);
+        
+        return createNewInstance();
+    }                    
 
     private void registerTopologyDebugCounters() throws FloodlightModuleException {
         if (debugCounters == null) {
