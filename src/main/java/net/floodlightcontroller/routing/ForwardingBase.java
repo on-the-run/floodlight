@@ -230,7 +230,8 @@ public abstract class ForwardingBase
             .setCommand(flowModCommand)
             .setMatch(match)
             .setActions(actions)
-            .setLengthU(OFFlowMod.MINIMUM_LENGTH+OFActionOutput.MINIMUM_LENGTH);
+            .setLengthU(OFFlowMod.MINIMUM_LENGTH+OFActionOutput.MINIMUM_LENGTH)
+            .setXid(pi.getXid()); // added by Yiyang
 
         List<NodePortTuple> switchPortList = route.getPath();
 
@@ -408,6 +409,7 @@ public abstract class ForwardingBase
 
         po.setInPort(pi.getInPort());
         po.setLength(poLength);
+        po.setXid(pi.getXid()); // added by Yiyang
 
         try {
             counterStore.updatePktOutFMCounterStoreLocal(sw, po);
