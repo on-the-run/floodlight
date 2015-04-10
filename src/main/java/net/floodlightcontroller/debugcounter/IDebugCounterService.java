@@ -25,7 +25,8 @@ public interface IDebugCounterService extends IFloodlightService {
     /**
      *  A limit on the maximum number of counters that can be created
      */
-    public static final int MAX_COUNTERS = 5000;
+    //public static final int MAX_COUNTERS = 5000;
+    public static final int MAX_COUNTERS = 25000;
 
     /**
      * Exception thrown when MAX_COUNTERS have been registered
