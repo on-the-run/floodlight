@@ -154,7 +154,8 @@ public class TopologyInstance {
         clusterBroadcastNodePorts = new HashMap<Long, Set<NodePortTuple>>();
 
         pathcache = CacheBuilder.newBuilder().concurrencyLevel(4)
-                    .maximumSize(1000L)
+                    //.maximumSize(1000L)
+        			.maximumSize(1048576L)
                     .build(
                             new CacheLoader<RouteId, Route>() {
                                 public Route load(RouteId rid) {
@@ -164,7 +165,9 @@ public class TopologyInstance {
     }
 
     public void compute() {
-
+		//Yiyang
+    	System.out.println("compute() is called!");
+    	
         // Step 1: Compute clusters ignoring broadcast domain links
         // Create nodes for clusters in the higher level topology
         // Must ignore blocked links.
@@ -187,7 +190,7 @@ public class TopologyInstance {
         calculateBroadcastNodePortsInClusters();
 
         // Step 4. print topology.
-        printTopology();
+        //printTopology();
     }
 
     public void printTopology() {
